@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바보타임 — 운영 시스템</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@600;700;900&display=swap');
+
+:root {
+  --wood-dark: #3D2610;
+  --wood-mid: #6B4728;
+  --wood-light: #A0714F;
+  --felt: #2D5A3D;
+  --gold: #C9922A;
+  --gold-light: #E8B84B;
+  --cream: #F5EDD8;
+  --red: #C0392B;
+  --text-dark: #1A0F00;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #0f0800; color: var(--cream); }
+
+/* ══════════════════════════
+   모드 선택 화면
+══════════════════════════ */
+#mode-select {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 40% 40%, #2c1a08 0%, #0f0800 70%);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999;
+}
+.mode-box {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+.mode-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 3rem;
+  color: var(--gold-light);
+  text-shadow: 0 2px 24px rgba(232,184,75,0.4);
+  margin-bottom: .4rem;
+}
+.mode-sub {
+  color: var(--wood-light);
+  font-size: .95rem;
+  margin-bottom: 3rem;
+}
+.mode-cards {
+  display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;
+}
+.mode-card {
+  background: #1A0F00;
+  border: 2px solid var(--wood-mid);
+  border-radius: 20px;
+  padding: 2rem 2.5rem;
+  width: 240px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.mode-card:hover {
+  border-color: var(--gold);
+  background: #251508;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(201,146,42,0.25);
+}
+.mode-icon { font-size: 3rem; margin-bottom: 1rem; }
+.mode-name { font-family: 'Noto Serif KR', serif; font-size: 1.2rem; color: var(--gold-light); margin-bottom: .5rem; }
+.mode-desc { font-size: .8rem; color: var(--wood-light); line-height: 1.5; }
+
+/* ══════════════════════════
+   공통 숨김
+══════════════════════════ */
+#operator-screen, #broadcast-screen { display: none; }
+
+/* ══════════════════════════
+   운영진 화면
+══════════════════════════ */
+#operator-screen {
+  min-height: 100vh;
+  background: #0f0800;
+  padding: 0;
+}
+
+.op-header {
+  background: #1A0F00;
+  border-bottom: 2px solid var(--wood-mid);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.op-header-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.1rem;
+  color: var(--gold-light);
+}
+.op-header-badge {
+  background: rgba(201,146,42,.15);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: .3rem .8rem;
+  font-size: .72rem;
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.op-body {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 60px);
+}
+
+/* 왼쪽: 입력 패널 */
+.op-left {
+  background: #140900;
+  border-right: 2px solid var(--wood-dark);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.op-section-title {
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: .6rem;
+}
+
+/* 코드 입력 */
+.code-input-area {
+  background: #1A0F00;
+  border: 2px solid var(--wood-mid);
+  border-radius: 14px;
+  padding: 1.2rem;
+}
+.code-input-row {
+  display: flex;
+  gap: .6rem;
+  align-items: stretch;
+}
+.code-input {
+  flex: 1;
+  background: #0f0800;
+  border: 2px solid var(--wood-mid);
+  border-radius: 10px;
+  color: var(--gold-light);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  padding: .65rem 1rem;
+  outline: none;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  transition: border-color .15s;
+}
+.code-input:focus { border-color: var(--gold); }
+.code-input::placeholder { color: rgba(160,113,79,.4); font-size: .9rem; letter-spacing: .04em; }
+.btn-lookup {
+  background: var(--gold);
+  color: #1A0F00;
+  border: none;
+  border-radius: 10px;
+  padding: .65rem 1.2rem;
+  font-size: .9rem;
+  font-weight: 700;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.btn-lookup:hover { background: var(--gold-light); }
+.code-hint {
+  margin-top: .6rem;
+  font-size: .72rem;
+  color: var(--wood-light);
+}
+
+/* 미리보기 카드 */
+.preview-area {
+  background: #1A0F00;
+  border: 2px solid var(--wood-mid);
+  border-radius: 14px;
+  padding: 1.2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.preview-card-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0;
+  gap: 1rem;
+}
+.preview-card {
+  width: 160px;
+  background: var(--cream);
+  border: 3px solid var(--gold);
+  border-radius: 16px;
+  padding: 1.4rem 1rem 1rem;
+  text-align: center;
+  color: var(--text-dark);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  position: relative;
+}
+.preview-card .card-code-tag {
+  position: absolute;
+  bottom: 8px; right: 10px;
+  font-size: .6rem;
+  color: rgba(90,60,20,0.5);
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+.preview-card .card-emoji { font-size: 2.8rem; margin-bottom: .5rem; display: block; }
+.preview-card .card-name { font-family: 'Noto Serif KR', serif; font-size: .95rem; font-weight: 700; color: #1A0F00; }
+.preview-card .card-type-badge {
+  display: inline-block;
+  font-size: .62rem;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: .15rem .5rem;
+  margin: .4rem 0;
+  letter-spacing: .04em;
+}
+.preview-card .card-desc { font-size: .72rem; color: #5C3D1E; line-height: 1.4; }
+.preview-empty {
+  text-align: center;
+  color: rgba(160,113,79,.35);
+  font-size: .85rem;
+  line-height: 1.8;
+}
+
+.btn-broadcast {
+  width: 100%;
+  background: #C0392B;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: 'Noto Serif KR', serif;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 4px 16px rgba(192,57,43,0.35);
+  letter-spacing: .02em;
+}
+.btn-broadcast:hover:not(:disabled) { background: #E74C3C; transform: translateY(-1px); }
+.btn-broadcast:disabled { background: #3A2210; color: rgba(255,255,255,.2); cursor: default; box-shadow: none; transform: none; }
+
+/* 오른쪽: 카드 목록 */
+.op-right {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: .8rem;
+}
+.card-thumb {
+  background: #1A0F00;
+  border: 1.5px solid var(--wood-dark);
+  border-radius: 12px;
+  padding: .8rem .6rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all .15s;
+  position: relative;
+}
+.card-thumb:hover { border-color: var(--gold); background: #251508; }
+.card-thumb.selected { border-color: var(--gold); background: rgba(201,146,42,.15); }
+.card-thumb .ct-emoji { font-size: 1.6rem; margin-bottom: .3rem; }
+.card-thumb .ct-name { font-size: .72rem; color: var(--cream); font-weight: 700; margin-bottom: .2rem; }
+.card-thumb .ct-code {
+  font-size: .6rem;
+  color: var(--wood-light);
+  font-weight: 700;
+  letter-spacing: .08em;
+  background: rgba(0,0,0,.3);
+  border-radius: 5px;
+  padding: .1rem .35rem;
+  display: inline-block;
+}
+.card-thumb .ct-type {
+  font-size: .58rem;
+  border-radius: 5px;
+  padding: .1rem .35rem;
+  display: inline-block;
+  margin-top: .2rem;
+  font-weight: 700;
+}
+
+/* 현재 송출 중 표시 */
+.broadcast-status {
+  background: #1A0F00;
+  border: 2px solid var(--wood-mid);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+}
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+.status-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #555;
+  flex-shrink: 0;
+  transition: background .3s;
+}
+.status-dot.live { background: #E74C3C; animation: blink 1.2s ease infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.status-text { font-size: .8rem; color: var(--wood-light); }
+.status-name { font-size: .85rem; color: var(--cream); font-weight: 700; }
+
+/* 라운드 관리 */
+.round-control {
+  background: #1A0F00;
+  border: 2px solid var(--wood-mid);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+}
+.round-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .5rem;
+}
+.round-num { font-family: 'Noto Serif KR', serif; font-size: 1.3rem; color: var(--gold-light); }
+.btn-round {
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--wood-mid);
+  border-radius: 8px;
+  color: var(--cream);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: .78rem;
+  padding: .35rem .75rem;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-round:hover { border-color: var(--gold); color: var(--gold-light); }
+
+/* 활성 규칙 미니 */
+.active-rules-mini {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin-top: .4rem;
+}
+.rule-mini-chip {
+  background: rgba(201,146,42,.12);
+  border: 1px solid rgba(201,146,42,.4);
+  border-radius: 6px;
+  padding: .2rem .5rem;
+  font-size: .68rem;
+  color: var(--gold-light);
+}
+
+/* ══════════════════════════
+   송출 화면 (전체화면 전용)
+══════════════════════════ */
+#broadcast-screen {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, #2D5A3D 0%, #1A3D28 40%, #0D2418 100%);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 탁자 질감 배경 */
+#broadcast-screen::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(92deg, transparent 0, rgba(255,255,255,.012) 1px, transparent 2px, transparent 60px),
+    repeating-linear-gradient(5deg, transparent 0, rgba(0,0,0,.03) 1px, transparent 2px, transparent 80px);
+  pointer-events: none;
+}
+
+.bc-header {
+  position: absolute;
+  top: 2rem; left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 2;
+}
+.bc-game-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.4rem;
+  color: rgba(232,184,75,.5);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+.bc-round-info {
+  font-size: .8rem;
+  color: rgba(255,255,255,.3);
+  margin-top: .2rem;
+  letter-spacing: .1em;
+}
+
+/* 메인 카드 */
+.bc-card-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  z-index: 2;
+}
+
+.bc-main-card {
+  width: 320px;
+  min-height: 420px;
+  background: var(--cream);
+  border-radius: 28px;
+  border: 4px solid var(--gold);
+  box-shadow:
+    0 0 0 8px rgba(201,146,42,.15),
+    0 0 60px rgba(201,146,42,.3),
+    0 20px 60px rgba(0,0,0,.6);
+  padding: 2.5rem 2rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transform-origin: center;
+}
+
+/* 카드 뒷면 */
+.bc-card-back {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, #1A3A5C 0%, #0D2135 100%);
+  border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  gap: .5rem;
+}
+.bc-card-back-logo {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 2rem;
+  color: rgba(255,255,255,.15);
+  letter-spacing: .1em;
+}
+.bc-card-back-pattern {
+  font-size: 3rem;
+  opacity: .1;
+}
+
+/* 뒤집기 애니메이션 */
+.bc-card-flipper {
+  perspective: 1000px;
+  width: 320px; height: 420px;
+}
+.bc-card-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform .7s cubic-bezier(.4,0,.2,1);
+}
+.bc-card-inner.flipped { transform: rotateY(180deg); }
+.bc-card-front, .bc-card-back-face {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  border-radius: 28px;
+}
+.bc-card-back-face {
+  background: linear-gradient(135deg, #1A3A5C 0%, #0D2135 100%);
+  border: 4px solid #3A6A9C;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.bc-card-back-face .back-emoji { font-size: 5rem; opacity: .25; }
+.bc-card-back-face .back-text {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.8rem;
+  color: rgba(255,255,255,.15);
+  letter-spacing: .15em;
+}
+.bc-card-front {
+  background: var(--cream);
+  border: 4px solid var(--gold);
+  box-shadow:
+    0 0 0 8px rgba(201,146,42,.15),
+    0 0 80px rgba(201,146,42,.35),
+    0 20px 60px rgba(0,0,0,.6);
+  transform: rotateY(180deg);
+  padding: 2.5rem 2rem 2.5rem;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+}
+
+.bc-card-emoji { font-size: 6rem; line-height: 1; margin-bottom: 1.2rem; }
+.bc-card-type {
+  font-size: .75rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: .25rem .75rem;
+  letter-spacing: .06em;
+  margin-bottom: .8rem;
+  display: inline-block;
+}
+.bc-card-name {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #1A0F00;
+  margin-bottom: .8rem;
+  line-height: 1.2;
+}
+.bc-card-desc {
+  font-size: 1rem;
+  color: #5C3D1E;
+  line-height: 1.6;
+  max-width: 240px;
+}
+.bc-card-code-tag {
+  position: absolute;
+  bottom: 14px; right: 18px;
+  font-size: .65rem;
+  color: rgba(90,60,20,.4);
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+
+/* 카드 타입별 색상 */
+.type-rule    { background: #FFF3CD; color: #856404; }
+.type-action  { background: #D1ECF1; color: #0C5460; }
+.type-bonus   { background: #D4EDDA; color: #155724; }
+.type-penalty { background: #F8D7DA; color: #721C24; }
+
+/* 스팟라이트 링 */
+.bc-spotlight {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,146,42,.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+  animation: spotlight-pulse 3s ease infinite;
+}
+@keyframes spotlight-pulse {
+  0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}
+}
+
+/* 카드 아래 정보 */
+.bc-card-info {
+  margin-top: 2rem;
+  text-align: center;
+  z-index: 2;
+}
+.bc-card-info-name {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.5rem;
+  color: var(--gold-light);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all .5s .5s;
+}
+.bc-card-info-name.visible { opacity: 1; transform: translateY(0); }
+.bc-card-info-desc {
+  font-size: .88rem;
+  color: rgba(255,255,255,.5);
+  margin-top: .3rem;
+  opacity: 0;
+  transition: all .5s .7s;
+}
+.bc-card-info-desc.visible { opacity: 1; }
+
+/* 활성 규칙 하단 */
+.bc-active-rules {
+  position: absolute;
+  bottom: 1.5rem; left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  z-index: 2;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 90vw;
+}
+.bc-rule-chip {
+  background: rgba(0,0,0,.4);
+  border: 1px solid rgba(201,146,42,.35);
+  border-radius: 20px;
+  padding: .3rem .85rem;
+  font-size: .72rem;
+  color: rgba(232,184,75,.7);
+  backdrop-filter: blur(4px);
+}
+.bc-rule-chip.new-rule {
+  border-color: var(--gold);
+  color: var(--gold-light);
+  background: rgba(201,146,42,.15);
+  animation: chip-pop .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes chip-pop {
+  from{transform:scale(0);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+
+/* 좌측 상단 LIVE 뱃지 */
+.bc-live-badge {
+  position: absolute;
+  top: 1.5rem; right: 1.5rem;
+  background: #C0392B;
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+  padding: .3rem .7rem;
+  border-radius: 6px;
+  animation: blink 1.5s ease infinite;
+  z-index: 10;
+}
+
+/* 대기 화면 (카드 뒤집기 전) */
+.bc-waiting {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 5;
+  transition: opacity .4s;
+}
+.bc-waiting.hidden { opacity: 0; pointer-events: none; }
+.bc-waiting-icon { font-size: 5rem; margin-bottom: 1rem; animation: float 3s ease infinite; }
+@keyframes float {
+  0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)}
+}
+.bc-waiting-text {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.5rem;
+  color: rgba(232,184,75,.5);
+}
+
+/* 송출화면 닫기 버튼 (운영진용) */
+.bc-close-btn {
+  position: absolute;
+  top: 1rem; left: 1rem;
+  background: rgba(0,0,0,.5);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  color: rgba(255,255,255,.4);
+  font-size: .75rem;
+  padding: .4rem .8rem;
+  cursor: pointer;
+  z-index: 20;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all .15s;
+}
+.bc-close-btn:hover { color: #fff; border-color: rgba(255,255,255,.4); }
+
+/* ── 유틸 ── */
+.divider {
+  height: 1px;
+  background: var(--wood-dark);
+  margin: .2rem 0;
+}
+.tag-new {
+  background: #C0392B;
+  color: #fff;
+  font-size: .58rem;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: .1rem .35rem;
+  margin-left: .3rem;
+  vertical-align: middle;
+}
+
+/* 스크롤바 */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--wood-dark); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ══ 모드 선택 ══ -->
+<div id="mode-select">
+  <div class="mode-box">
+    <div class="mode-title">바보타임</div>
+    <div class="mode-sub">화면 모드를 선택하세요</div>
+    <div class="mode-cards">
+      <div class="mode-card" onclick="enterMode('operator')">
+        <div class="mode-icon">🎛️</div>
+        <div class="mode-name">운영진 패널</div>
+        <div class="mode-desc">카드 코드 입력 및<br>송출 제어 화면<br><br><b style="color:var(--gold-light)">운영자용</b></div>
+      </div>
+      <div class="mode-card" onclick="enterMode('broadcast')">
+        <div class="mode-icon">📺</div>
+        <div class="mode-name">송출 화면</div>
+        <div class="mode-desc">프로젝터 · TV에<br>띄워두는 화면<br><br><b style="color:var(--gold-light)">플레이어용</b></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 운영진 화면 ══ -->
+<div id="operator-screen">
+  <div class="op-header">
+    <div class="op-header-title">🎛️ 바보타임 운영 패널</div>
+    <div style="display:flex;gap:.6rem;align-items:center">
+      <div class="op-header-badge" id="live-status-badge">⚫ 송출 대기</div>
+      <button class="btn-round" onclick="enterMode('broadcast')">📺 송출 화면 열기</button>
+    </div>
+  </div>
+
+  <div class="op-body">
+    <!-- 왼쪽 컨트롤 -->
+    <div class="op-left">
+
+      <!-- 라운드 관리 -->
+      <div class="round-control">
+        <div class="op-section-title">라운드</div>
+        <div class="round-row">
+          <div class="round-num" id="op-round-label">라운드 <span id="op-round-num">1</span></div>
+          <div style="display:flex;gap:.4rem">
+            <button class="btn-round" onclick="changeRound(-1)">◀</button>
+            <button class="btn-round" onclick="changeRound(1)">▶</button>
+          </div>
+        </div>
+        <div style="font-size:.7rem;color:var(--wood-light);margin-bottom:.4rem">적용 중인 규칙</div>
+        <div class="active-rules-mini" id="op-active-rules">
+          <span style="color:rgba(160,113,79,.4);font-size:.7rem">없음</span>
+        </div>
+      </div>
+
+      <!-- 코드 입력 -->
+      <div class="code-input-area">
+        <div class="op-section-title">카드 코드 입력</div>
+        <div class="code-input-row">
+          <input type="text" class="code-input" id="code-input" placeholder="예: R-001" maxlength="6"
+            oninput="this.value=this.value.toUpperCase()"
+            onkeydown="if(event.key==='Enter')lookupCode()">
+          <button class="btn-lookup" onclick="lookupCode()">확인</button>
+        </div>
+        <div class="code-hint">카드 우측 하단의 코드를 입력하세요</div>
+        <div id="code-error" style="font-size:.72rem;color:#E74C3C;margin-top:.4rem;display:none"></div>
+      </div>
+
+      <!-- 미리보기 -->
+      <div class="preview-area">
+        <div class="op-section-title">미리보기</div>
+        <div class="preview-card-wrap">
+          <div id="preview-empty" class="preview-empty">코드를 입력하면<br>카드가 여기에 표시됩니다</div>
+          <div id="preview-card" style="display:none">
+            <div class="preview-card" id="pc-inner">
+              <span class="card-emoji" id="pc-emoji">🃏</span>
+              <div class="card-type-badge" id="pc-type-badge">규칙</div>
+              <div class="card-name" id="pc-name">카드 이름</div>
+              <div class="card-desc" id="pc-desc">설명</div>
+              <div class="card-code-tag" id="pc-code-tag">R-000</div>
+            </div>
+          </div>
+        </div>
+        <button class="btn-broadcast" id="btn-broadcast" disabled onclick="broadcastCard()">
+          📺 이 카드 송출하기
+        </button>
+      </div>
+
+      <!-- 현재 송출 상태 -->
+      <div class="broadcast-status">
+        <div class="op-section-title">송출 상태</div>
+        <div class="status-row">
+          <div class="status-dot" id="status-dot"></div>
+          <div>
+            <div class="status-name" id="status-name">대기 중</div>
+            <div class="status-text" id="status-text">아직 송출된 카드 없음</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 오른쪽: 전체 카드 목록 -->
+    <div class="op-right">
+      <div class="op-section-title" style="margin-bottom:1rem">전체 카드 목록 (클릭하여 선택)</div>
+      <div class="card-grid" id="card-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 송출 화면 ══ -->
+<div id="broadcast-screen">
+  <button class="bc-close-btn" onclick="enterMode('operator')">← 운영 패널</button>
+  <div class="bc-live-badge">● LIVE</div>
+  <div class="bc-spotlight"></div>
+
+  <div class="bc-header">
+    <div class="bc-game-title">BABO TIME</div>
+    <div class="bc-round-info" id="bc-round-info">라운드 1</div>
+  </div>
+
+  <!-- 대기 화면 -->
+  <div class="bc-waiting" id="bc-waiting">
+    <div class="bc-waiting-icon">🃏</div>
+    <div class="bc-waiting-text">카드를 기다리는 중...</div>
+  </div>
+
+  <!-- 카드 뒤집기 영역 -->
+  <div class="bc-card-stage" id="bc-card-stage" style="display:none">
+    <div class="bc-card-flipper">
+      <div class="bc-card-inner" id="bc-card-inner">
+        <!-- 뒷면 -->
+        <div class="bc-card-back-face">
+          <div class="back-emoji">🃏</div>
+          <div class="back-text">바보타임</div>
+        </div>
+        <!-- 앞면 -->
+        <div class="bc-card-front" id="bc-card-front">
+          <span class="bc-card-emoji" id="bc-emoji">🚫</span>
+          <span class="bc-card-type" id="bc-type-badge">규칙</span>
+          <div class="bc-card-name" id="bc-name">카드 이름</div>
+          <div class="bc-card-desc" id="bc-desc">설명</div>
+          <div class="bc-card-code-tag" id="bc-code-tag">R-000</div>
+        </div>
+      </div>
+    </div>
+    <div class="bc-card-info">
+      <div class="bc-card-info-name" id="bc-info-name"></div>
+      <div class="bc-card-info-desc" id="bc-info-desc"></div>
+    </div>
+  </div>
+
+  <!-- 하단 활성 규칙 -->
+  <div class="bc-active-rules" id="bc-active-rules"></div>
+</div>
+
+<script>
+/* ══════════════════════════
+   카드 데이터베이스
+   코드 형식: R(Rule규칙) / A(Action행동) / B(Bonus보너스) / P(Penalty벌칙)
+   + 3자리 숫자
+══════════════════════════ */
+const CARD_DB = {
+  // ── 규칙 카드 (R) ──
+  'R-001': { emoji:'🚫', name:'"네/아니오" 금지', desc:'이 두 단어를 말하면 즉시 벌점!', type:'rule' },
+  'R-002': { emoji:'😂', name:'웃음 참기', desc:'소리 내어 웃거나 크게 미소 지으면 벌점', type:'rule' },
+  'R-003': { emoji:'👉', name:'손가락질 금지', desc:'손가락으로 사람이나 물건을 가리키면 벌점', type:'rule' },
+  'R-004': { emoji:'🤔', name:'추임새 금지', desc:'"음", "어", "그" 같은 추임새를 넣으면 벌점', type:'rule' },
+  'R-005': { emoji:'🙅', name:'고개짓 금지', desc:'끄덕이거나 가로젓는 행동 금지', type:'rule' },
+  'R-006': { emoji:'🔢', name:'숫자 말하기 금지', desc:'숫자(하나, 둘, 1, 2…)를 말하면 벌점', type:'rule' },
+  'R-007': { emoji:'📛', name:'이름 부르기 금지', desc:'상대방의 이름을 직접 말하면 벌점', type:'rule' },
+  'R-008': { emoji:'🤐', name:'"바보" 금지', desc:'"바보" 또는 "멍청이"를 말하면 내가 벌점', type:'rule' },
+  'R-009': { emoji:'👏', name:'박수 금지', desc:'어떤 상황에서도 박수를 치면 벌점', type:'rule' },
+  'R-010': { emoji:'⏱', name:'3초 후 대답', desc:'질문을 받으면 반드시 3초 후에만 대답 가능', type:'rule' },
+  'R-011': { emoji:'🎵', name:'노래·흥얼거림 금지', desc:'흥얼거리거나 노래하면 즉시 벌점', type:'rule' },
+  'R-012': { emoji:'📱', name:'왼손 사용 금지', desc:'무언가를 잡거나 들 때 왼손을 사용하면 벌점', type:'rule' },
+  // ── 행동 카드 (A) ──
+  'A-001': { emoji:'🔄', name:'순서 반전', desc:'이번 라운드 차례가 반대 방향으로 바뀝니다', type:'action' },
+  'A-002': { emoji:'⏭', name:'차례 건너뛰기', desc:'다음 플레이어의 차례가 즉시 건너뜁니다', type:'action' },
+  'A-003': { emoji:'🔀', name:'자리 바꾸기', desc:'운영진이 지정하는 두 플레이어가 자리를 교환합니다', type:'action' },
+  'A-004': { emoji:'🎯', name:'지목 챌린지', desc:'한 플레이어를 지목해 즉흥 미션을 내릴 수 있습니다', type:'action' },
+  'A-005': { emoji:'🤫', name:'침묵 타임', desc:'30초 동안 모두 말할 수 없습니다. 말하면 벌점!', type:'action' },
+  // ── 보너스 카드 (B) ──
+  'B-001': { emoji:'✨', name:'면죄부', desc:'이 카드를 받은 플레이어는 벌점 1개를 없앨 수 있습니다', type:'bonus' },
+  'B-002': { emoji:'🛡', name:'규칙 면제', desc:'이번 라운드 1회에 한해 규칙을 어겨도 벌점 없음', type:'bonus' },
+  'B-003': { emoji:'👑', name:'바보왕 선포', desc:'현재 벌점이 가장 많은 사람에게 "바보왕" 왕관을 씌웁니다', type:'bonus' },
+  // ── 벌칙 카드 (P) ──
+  'P-001': { emoji:'🎤', name:'노래 한 소절', desc:'운영진이 지정한 노래를 한 소절 불러야 합니다', type:'penalty' },
+  'P-002': { emoji:'🤸', name:'만세 10번', desc:'자리에서 일어나 만세를 10번 외쳐야 합니다', type:'penalty' },
+  'P-003': { emoji:'😤', name:'벌점 2배', desc:'이번 라운드 내 벌점이 2배로 적용됩니다', type:'penalty' },
+};
+
+const TYPE_META = {
+  rule:    { label:'규칙', color:'#856404', bg:'#FFF3CD' },
+  action:  { label:'행동', color:'#0C5460', bg:'#D1ECF1' },
+  bonus:   { label:'보너스', color:'#155724', bg:'#D4EDDA' },
+  penalty: { label:'벌칙', color:'#721C24', bg:'#F8D7DA' },
+};
+
+/* ── 상태 ── */
+let currentCard = null;
+let activeRules = [];
+let currentRound = 1;
+let broadcastedCard = null;
+
+/* ── 모드 전환 ── */
+function enterMode(mode) {
+  document.getElementById('mode-select').style.display = 'none';
+  document.getElementById('operator-screen').style.display = mode === 'operator' ? 'block' : 'none';
+  document.getElementById('broadcast-screen').style.display = mode === 'broadcast' ? 'flex' : 'none';
+  if (mode === 'broadcast') syncBroadcast();
+  if (mode === 'operator') buildCardGrid();
+}
+
+/* ── 카드 목록 그리드 ── */
+function buildCardGrid() {
+  const grid = document.getElementById('card-grid');
+  grid.innerHTML = '';
+  const groups = { rule:[], action:[], bonus:[], penalty:[] };
+  Object.entries(CARD_DB).forEach(([code, card]) => groups[card.type].push({code, ...card}));
+
+  const groupOrder = ['rule','action','bonus','penalty'];
+  groupOrder.forEach(type => {
+    const meta = TYPE_META[type];
+    const header = document.createElement('div');
+    header.style.cssText = `grid-column:1/-1;font-size:.68rem;font-weight:700;color:${meta.color};
+      background:${meta.bg}22;border:1px solid ${meta.bg}66;border-radius:6px;
+      padding:.3rem .7rem;margin-top:.6rem;letter-spacing:.06em`;
+    header.textContent = `${meta.label} 카드 (${groups[type].length}장)`;
+    grid.appendChild(header);
+
+    groups[type].forEach(card => {
+      const el = document.createElement('div');
+      el.className = 'card-thumb';
+      el.id = `thumb-${card.code}`;
+      el.innerHTML = `
+        <div class="ct-emoji">${card.emoji}</div>
+        <div class="ct-name">${card.name}</div>
+        <div class="ct-code">${card.code}</div>
+        <div class="ct-type" style="background:${meta.bg};color:${meta.color}">${meta.label}</div>
+      `;
+      el.addEventListener('click', () => selectCardByCode(card.code));
+      grid.appendChild(el);
+    });
+  });
+}
+
+/* ── 코드로 카드 조회 ── */
+function lookupCode() {
+  const raw = document.getElementById('code-input').value.trim().toUpperCase();
+  const errorEl = document.getElementById('code-error');
+  if (!raw) { showCodeError('코드를 입력해 주세요'); return; }
+
+  // 하이픈 없이 입력한 경우 자동 보정 (예: R001 → R-001)
+  const code = raw.includes('-') ? raw : raw.slice(0,1) + '-' + raw.slice(1);
+
+  if (!CARD_DB[code]) {
+    showCodeError(`"${code}" 코드를 찾을 수 없습니다`);
+    return;
+  }
+  errorEl.style.display = 'none';
+  selectCardByCode(code);
+}
+
+function showCodeError(msg) {
+  const el = document.getElementById('code-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function selectCardByCode(code) {
+  const card = CARD_DB[code];
+  if (!card) return;
+  currentCard = { code, ...card };
+
+  // 코드 입력창 업데이트
+  document.getElementById('code-input').value = code;
+  document.getElementById('code-error').style.display = 'none';
+
+  // 카드 썸네일 하이라이트
+  document.querySelectorAll('.card-thumb').forEach(el => el.classList.remove('selected'));
+  const thumb = document.getElementById(`thumb-${code}`);
+  if (thumb) { thumb.classList.add('selected'); thumb.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+
+  // 미리보기 업데이트
+  const meta = TYPE_META[card.type];
+  document.getElementById('preview-empty').style.display = 'none';
+  document.getElementById('preview-card').style.display = 'block';
+  document.getElementById('pc-emoji').textContent = card.emoji;
+  document.getElementById('pc-name').textContent = card.name;
+  document.getElementById('pc-desc').textContent = card.desc;
+  document.getElementById('pc-code-tag').textContent = code;
+  const badge = document.getElementById('pc-type-badge');
+  badge.textContent = meta.label;
+  badge.style.background = meta.bg;
+  badge.style.color = meta.color;
+
+  document.getElementById('btn-broadcast').disabled = false;
+}
+
+/* ── 송출 ── */
+function broadcastCard() {
+  if (!currentCard) return;
+
+  broadcastedCard = currentCard;
+
+  // 규칙 카드면 active rules에 추가
+  if (currentCard.type === 'rule') {
+    if (!activeRules.find(r => r.code === currentCard.code)) {
+      activeRules.push(currentCard);
+    }
+  }
+  updateActiveRulesUI();
+
+  // 상태 표시
+  document.getElementById('status-dot').classList.add('live');
+  document.getElementById('status-name').textContent = currentCard.name;
+  document.getElementById('status-text').textContent = `${currentCard.code} · ${TYPE_META[currentCard.type].label} 카드 송출 중`;
+  document.getElementById('live-status-badge').textContent = '🔴 LIVE 송출 중';
+  document.getElementById('live-status-badge').style.borderColor = '#E74C3C';
+  document.getElementById('live-status-badge').style.color = '#E74C3C';
+
+  // 송출 화면 업데이트
+  syncBroadcast();
+
+  // 자동으로 송출 화면 열기
+  enterMode('broadcast');
+
+  // 카드 뒤집기 애니메이션 (약간의 지연)
+  setTimeout(() => {
+    const inner = document.getElementById('bc-card-inner');
+    if (inner) inner.classList.add('flipped');
+    setTimeout(() => {
+      const infoName = document.getElementById('bc-info-name');
+      const infoDesc = document.getElementById('bc-info-desc');
+      if (infoName) infoName.classList.add('visible');
+      if (infoDesc) infoDesc.classList.add('visible');
+    }, 200);
+  }, 300);
+}
+
+function syncBroadcast() {
+  // 라운드
+  document.getElementById('bc-round-info').textContent = `라운드 ${currentRound}`;
+
+  if (!broadcastedCard) {
+    document.getElementById('bc-waiting').classList.remove('hidden');
+    document.getElementById('bc-card-stage').style.display = 'none';
+    return;
+  }
+
+  const card = broadcastedCard;
+  const meta = TYPE_META[card.type];
+
+  document.getElementById('bc-waiting').classList.add('hidden');
+  document.getElementById('bc-card-stage').style.display = 'flex';
+
+  // 카드 앞면 콘텐츠
+  document.getElementById('bc-emoji').textContent = card.emoji;
+  document.getElementById('bc-name').textContent = card.name;
+  document.getElementById('bc-desc').textContent = card.desc;
+  document.getElementById('bc-code-tag').textContent = card.code;
+  document.getElementById('bc-info-name').textContent = card.name;
+  document.getElementById('bc-info-desc').textContent = card.desc;
+
+  const typeBadge = document.getElementById('bc-type-badge');
+  typeBadge.textContent = meta.label;
+  typeBadge.style.background = meta.bg;
+  typeBadge.style.color = meta.color;
+  typeBadge.className = `bc-card-type type-${card.type}`;
+
+  // 뒤집기 초기화 후 재실행
+  const inner = document.getElementById('bc-card-inner');
+  inner.classList.remove('flipped');
+  document.getElementById('bc-info-name').classList.remove('visible');
+  document.getElementById('bc-info-desc').classList.remove('visible');
+
+  // 활성 규칙 칩
+  const chipsEl = document.getElementById('bc-active-rules');
+  chipsEl.innerHTML = activeRules.map((r, i) => `
+    <div class="bc-rule-chip ${i === activeRules.length - 1 && r.code === card.code ? 'new-rule' : ''}">
+      ${r.emoji} ${r.name}
+    </div>
+  `).join('');
+}
+
+/* ── 라운드 변경 ── */
+function changeRound(delta) {
+  currentRound = Math.max(1, currentRound + delta);
+  document.getElementById('op-round-num').textContent = currentRound;
+  document.getElementById('bc-round-info').textContent = `라운드 ${currentRound}`;
+}
+
+/* ── 활성 규칙 UI ── */
+function updateActiveRulesUI() {
+  const el = document.getElementById('op-active-rules');
+  if (activeRules.length === 0) {
+    el.innerHTML = '<span style="color:rgba(160,113,79,.4);font-size:.7rem">없음</span>';
+    return;
+  }
+  el.innerHTML = activeRules.map(r => `
+    <span class="rule-mini-chip">${r.emoji} ${r.name}</span>
+  `).join('');
+}
+
+/* ── 초기화 ── */
+buildCardGrid();
+</script>
+</body>
+</html>
